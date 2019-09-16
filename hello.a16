@@ -1,0 +1,310 @@
+jump @1024
+.memory 1024
+set2 f1 3
+
+jump @function_end
+
+@multiply
+; 局部变量空间
+;
+set2 a3 8                ; f1 += 8 对应 .return 8
+add2 f1 a3 f1               ;
+
+set2 a3 2                   ; 保存「变量 1」
+subtract2 f1 a3 a3          ;
+save_from_register2 a1 a3   ;
+
+set2 a3 4                   ; 保存「变量 2」
+subtract2 f1 a3 a3          ;
+save_from_register2 a2 a3   ;
+
+set2 a1 1                   ; 用于 while 判断
+set2 a3 6                   ; 保存「变量 3」
+subtract2 f1 a3 a3          ;
+save_from_register2 a1 a3   ;
+
+set2 a1 0                   ; 作为累加的 result
+set2 a3 8                   ; 保存「变量 4」
+subtract2 f1 a3 a3          ;
+save_from_register2 a1 a3   ;
+
+@while_start
+; 判断循环条件
+;
+set2 a3 4                   ; 读取「变量 2」
+subtract2 f1 a3 a3          ;
+load_from_register2 a3 a1   ;
+
+set2 a3 6                   ; 读取「变量 3」
+subtract2 f1 a3 a3          ;
+load_from_register2 a3 a2   ;
+
+compare a1 a2
+jump_if_less @while_end
+
+;「变量 3」 += 1
+;
+set2 a3 6                   ; 读取「变量 3」
+subtract2 f1 a3 a3          ;
+load_from_register2 a3 a1   ;
+
+set2 a3 1
+add2 a1 a3 a1
+
+set2 a3 6                   ; 保存「变量 3」
+subtract2 f1 a3 a3          ;
+save_from_register2 a1 a3   ;
+
+;「变量 4」 += 「变量 1」
+;
+set2 a3 8                   ; 读取「变量 4」
+subtract2 f1 a3 a3          ;
+load_from_register2 a3 a1   ;
+
+set2 a3 2                   ; 读取「变量 1」
+subtract2 f1 a3 a3          ;
+load_from_register2 a3 a2   ;
+
+add2 a1 a2 a1
+
+set2 a3 8                   ; 保存「变量 4」
+subtract2 f1 a3 a3          ;
+save_from_register2 a1 a3   ;
+
+jump @while_start
+@while_end
+
+; 「变量 4」作为函数返回值，放入 a1
+;
+set2 a3 8                   ; 读取「变量 4」
+subtract2 f1 a3 a3          ;
+load_from_register2 a3 a1   ;
+
+.return 8
+; @multiply end
+
+
+@function_draw_point         ;接受x y两个参数
+set2 a3 2
+add2 f1 a3 f1
+set2 a3 8 
+subtract2 f1 a3 a3
+load_from_register2 a3 a2     ;读取 x 到 a2
+
+set2 a1 65024                 
+add2 a1 a2 a1                 ; x + 65024
+set2 a3 2
+subtract2 f1 a3 a3
+save_from_register2 a1 a3     ;x + 65024 save 到局部变量1中
+set2 a1 32
+set2 a3 6 
+subtract2 f1 a3 a3
+load_from_register2 a3 a2    ;读取 y 到a2
+.call @multiply 
+set2 a3 2
+subtract2 f1 a3 a3
+load_from_register2 a3 a2
+add2 a1 a2 a1                 ; a1表示点在内存中的位置address
+set a2 195
+
+save_from_register a2 a1     ; 把195写入到对应内存位置 
+
+.return 2
+
+; draw_point end
+
+
+
+
+@function_draw_column
+; 申请两个变量的内存， 局部变量1 保存 遍历i值， 局部变量2 保存column
+set2 a3 4
+add2 f1 a3 f1
+
+; 初始化局部变量1为 0， 可能取值0-7
+set2 a2 0
+set2 a3 4
+subtract2 f1 a3 a3
+save_from_register2 a2 a3 
+
+; 读取参数1 column, 并保存到局部变量2
+set2 a3 12
+subtract2 f1 a3 a3
+load_from_register2 a3 a1
+
+set2 a3 2
+subtract2 f1 a3 a3
+save_from_register2 a1 a3 
+@column_while_start
+set2 a3 4
+subtract2 f1 a3 a3
+load_from_register2 a3 a2
+
+set2 a1 7
+compare a1 a2
+
+jump_if_less @column_while_end
+
+; 读取参数1 column
+set2 a3 2
+subtract2 f1 a3 a3
+load_from_register2 a3 a1
+
+; 1 & column
+set2 a2 1
+and a1 a2 a1
+
+compare a1 a2
+jump_if_less @column_no_draw
+; 画点
+
+; 读取 y
+set2 a3 8
+subtract2 f1 a3 a3
+load_from_register2 a3 a2
+
+set2 a3 4
+subtract2 f1 a3 a3
+load_from_register2 a3 a1
+; y + i
+add2 a2 a1 a2
+
+set2 a3 4
+add2 f1 a3 f1
+; 把 y+i  作为第二个参数传给 @draw_point
+set2 a3 2
+subtract2 f1 a3 a3
+save_from_register2 a2 a3 
+
+; 取 x
+set2 a3 14
+subtract2 f1 a3 a3
+load_from_register2 a3 a2
+
+; 把 x 作为第一个参数传给 @draw_point
+set2 a3 4
+subtract2 f1 a3 a3
+save_from_register2 a2 a3 
+.call @function_draw_point
+; 释放参数内存
+set2 a3 4
+subtract2 f1 a3 f1
+@column_no_draw
+; 读取参数1 column
+set2 a3 2
+subtract2 f1 a3 a3
+load_from_register2 a3 a1
+;column >>= 1
+shift_right a1
+save_from_register2 a1 a3
+
+;i = i + 1
+set2 a3 4
+subtract2 f1 a3 a3
+load_from_register2 a3 a1
+set2 a2 1
+add2 a1 a2 a1
+save_from_register2 a1 a3
+
+
+jump @column_while_start
+@column_while_end
+
+.return 4
+; draw_column end
+
+
+
+
+
+@function_draw_char         ; 1564
+
+; 申请两个局部变量空间
+set2 a3 4                   ;4 f1 += 4 对应 .return 4
+add2 f1 a3 f1               ;4
+
+set2 a2 0
+set2 a3 4                   ;4 保存「局部变量 1」i
+subtract2 f1 a3 a3          ;4
+save_from_register2 a2 a3   ;3
+
+
+
+
+@char_while_start
+
+; 获取 char_code 到 a1
+set2 a3 12
+subtract2 f1 a3 a3
+load_from_register2 a3 a1
+set2 a2 4
+.call @multiply
+
+set2 a2 64512
+; 64512 + char_code * 4
+add2 a1 a2 a1               ; address
+
+set2 a3 4 
+subtract2 f1 a3 a3
+load_from_register2 a3 a2   ; i 
+
+; address + i
+add2 a1 a2 a1 
+
+set2 a3 3
+compare a3 a2
+jump_if_less @char_while_end
+; current_column
+load_from_register a1 a2    ;!!!
+
+set2 a3 6 
+add2 f1 a3 f1
+; 把 current_column 当第一个参数
+set2 a3 6
+subtract2 f1 a3 a3
+save_from_register2 a2 a3
+
+; 取 x
+
+set2 a3 16
+subtract2 f1 a3 a3
+load_from_register2 a3 a1
+; i
+set2 a3 10
+subtract2 f1 a3 a3
+load_from_register2 a3 a2
+; x + i
+add2 a2 a1 a2
+
+set2 a3 4
+subtract2 f1 a3 a3
+save_from_register2 a2 a3
+
+; y
+set2 a3 14
+subtract2 f1 a3 a3
+load_from_register2 a3 a2
+
+set2 a3 2
+subtract2 f1 a3 a3
+save_from_register2 a2 a3
+
+.call @function_draw_column
+set2 a3 6
+subtract2 f1 a3 f1
+
+; i = i + 1
+set2 a3 4
+subtract2 f1 a3 a3
+load_from_register2 a3 a2
+set2 a1 1
+add2 a2 a1 a2
+save_from_register2 a2 a3
+
+jump @char_while_start
+@char_while_end
+
+.return 4
+;function_draw_char end
+
+@function_end
